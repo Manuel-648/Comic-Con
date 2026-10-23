@@ -126,6 +126,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception('La entrada VIP está restringida a mayores de edad');
         }
  
+        // Condición que impide la entrada Infantil a mayores de 18 años.
+        if ($edad >= 18 && $tipo === 'Infantil') {
+            throw new Exception('La entrada Infantil está restringida a menores de edad');
+        }
+
         // Calcula el precio total y obtiene los datos del resguardo.
         $resguardo = procesarInscripcion($nombre, $tipo, $talleresSel);
         $exito = true;
