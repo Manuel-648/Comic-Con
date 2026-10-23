@@ -143,3 +143,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Comic-Con DAW 2026 - Inscripción</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+        label { display: block; margin-top: 1rem; font-weight: bold; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: .5rem; box-sizing: border-box; }
+        fieldset { margin-top: 1rem; }
+        fieldset label { font-weight: normal; margin-top: .3rem; }
+        button { margin-top: 1.5rem; padding: .6rem 1.2rem; }
+        .error { background: #fdecea; color: #b71c1c; padding: .8rem; border-radius: 4px; margin-top: 1rem; }
+        .resguardo { background: #e8f5e9; padding: 1rem; border-radius: 4px; margin-top: 1.5rem; }
+    </style>
+</head>
+<body>
+ 
+<h1>Comic-Con DAW 2026</h1>
+ 
+<!-- BLOQUE 2 -->
+<!-- Formulario que se envía por POST al mismo archivo. -->
+<form action="comicon.php" method="post">
+ 
+    <label for="nombre">Nombre completo</label>
+    <input type="text" id="nombre" name="nombre" value="<?= $nombreForm ?>" required>
+ 
+    <label for="edad">Edad</label>
+    <input type="number" id="edad" name="edad" min="1" value="<?= $edadForm ?>" required>
+ 
+    <label for="tipo">Tipo de entrada</label>
+    <select id="tipo" name="tipo">
+        <!-- Bucle que genera las opciones del desplegable desde el array de tipos. -->
+        <?php foreach ($tiposEntrada as $opcion): ?>
+            <option value="<?= $opcion ?>" <?= $tipoForm === $opcion ? 'selected' : '' ?>>
+                <?= $opcion ?> (disponible)
+            </option>
+        <?php endforeach; ?>
+    </select>
+ 
+    <fieldset>
+        <legend>Talleres especiales</legend>
+        <!-- Bucle que genera un checkbox por cada taller del catálogo. -->
+        <?php foreach ($catalogoTalleres as $clave => $taller): ?>
+            <label>
+                <input type="checkbox" name="talleres[]" value="<?= $clave ?>"
+                    <?= in_array($clave, $talleresForm, true) ? 'checked' : '' ?>>
+                <?= $taller['nombre'] ?> (<?= $taller['precio'] ?> €)
+            </label>
+        <?php endforeach; ?>
+    </fieldset>
+ 
+    <button type="submit">Inscribirme</button>
+</form>
+ 
+<!-- Muestra el mensaje de error si el procesamiento falló. -->
+<?php if ($procesado && !$exito): ?>
+    <div class="error">
+        <strong>Error:</strong> <?= htmlspecialchars($mensajeError, ENT_QUOTES, 'UTF-8') ?>
+    </div>
+<?php endif; ?>
+ 
+<!-- BLOQUE 4 -->
+<!-- Muestra el resguardo solo si la inscripción fue correcta. -->
+<?php if ($exito): ?>
+    <div class="resguardo">
+        <h2>Resguardo de inscripción</h2>
+        <p><strong>Asistente:</strong> <?= $resguardo['nombre'] ?></p>
+        <p><strong>Entrada:</strong> <?= $resguardo['tipo'] ?> - <?= $resguardo['precioBase'] ?> €</p>
+ 
+        <!-- Condición que muestra la lista de talleres o un aviso si no hay ninguno. -->
+        <?php if (count($resguardo['talleres']) > 0): ?>
+            <p><strong>Talleres seleccionados:</strong></p>
+            <ul>
+                <!-- Bucle que lista cada taller seleccionado con su precio. -->
+                <?php foreach ($resguardo['talleres'] as $taller): ?>
+                    <li><?= $taller['nombre'] ?>: <?= $taller['precio'] ?> €</li>
+                <?php endforeach; ?>
+            </ul>
+        <?php else: ?>
+            <p><em>Sin talleres seleccionados.</em></p>
+        <?php endif; ?>
+ 
+        <h3>Total a pagar: <?= $resguardo['total'] ?> €</h3>
+    </div>
+<?php endif; ?>
+ 
+</body>
+</html>
