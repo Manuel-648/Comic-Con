@@ -80,4 +80,66 @@ $procesado = false;
 // Condición que detecta si el formulario se ha enviado por POST.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $procesado = true;
+
+//BLOQUE 1 (try/catch/finally)
+    // Bloque que agrupa todo el procesamiento para controlar los errores.
+    try {
+        //BLOQUE 3 (saneamiento, validación y cálculos)
+        // Recupera los datos con el operador ?? para evitar avisos si faltan.
+        $nombreBruto = $_POST['nombre']   ?? '';
+        $edadBruta   = $_POST['edad']     ?? '';
+        $tipo        = $_POST['tipo']     ?? '';
+        $talleresSel = $_POST['talleres'] ?? [];
+ 
+        // Sanea el nombre para evitar inyección de código (XSS).
+        $nombre = htmlspecialchars(trim((string) $nombreBruto), ENT_QUOTES, 'UTF-8');
+ 
+        // Guarda los valores para repintar el formulario.
+        $nombreForm   = $nombre;
+        $edadForm     = htmlspecialchars((string) $edadBruta, ENT_QUOTES, 'UTF-8');
+        $tipoForm     = htmlspecialchars((string) $tipo, ENT_QUOTES, 'UTF-8');
+        $talleresForm = is_array($talleresSel) ? $talleresSel : [];
+ 
+        // Condición que lanza una excepción si el nombre está vacío.
+        if ($nombre === '') {
+            throw new Exception('El nombre completo es obligatorio.');
+        }
+ 
+        // Valida que la edad sea un entero positivo.
+        $edad = filter_var($edadBruta, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($edad === false) {
+            throw new Exception('La edad debe ser un número entero positivo.');
+        }
+ 
+        // Condición que comprueba que el tipo de entrada sea uno de los permitidos.
+        if (!in_array($tipo, $tiposEntrada, true)) {
+            throw new Exception('Tipo de entrada no válido.');
+        }
+ 
+        // Condición que comprueba que los talleres lleguen como array.
+        if (!is_array($talleresSel)) {
+            throw new Exception('Formato de talleres no válido.');
+        }
+ 
+        // Condición que impide la entrada VIP a menores de 18 años.
+        if ($edad < 18 && $tipo === 'VIP') {
+            throw new Exception('La entrada VIP está restringida a mayores de edad');
+        }
+ 
+        // Calcula el precio total y obtiene los datos del resguardo.
+        $resguardo = procesarInscripcion($nombre, $tipo, $talleresSel);
+        $exito = true;
+ 
+    //BLOQUE 1 (catch)
+    // Captura la excepción y guarda su mensaje para mostrarlo al usuario.
+    } catch (Exception $e) {
+        $mensajeError = $e->getMessage();
+ 
+    //BLOQUE 1 (finally)
+    // Se ejecuta siempre: registra en el log del servidor la fecha y el resultado.
+    } finally {
+        $resultado = $exito ? 'EXITOSO' : 'FALLIDO';
+        error_log('[' . date('Y-m-d H:i:s') . '] Inscripción Comic-Con procesada. Resultado: ' . $resultado);
+    }
+}
 ?>
